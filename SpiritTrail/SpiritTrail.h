@@ -1,8 +1,9 @@
 #pragma once
 
 #include <BML/BMLAll.h>
+#include <thread>
 
-#define TICK_SPEED 60
+#define TICK_SPEED 8
 
 extern "C" {
 	__declspec(dllexport) IMod* BMLEntry(IBML* bml);
@@ -24,17 +25,8 @@ public:
 		XObjectArray* objArray, CKObject* masterObj) override;
 	virtual void OnProcess() override;
 
-	virtual void OnStartLevel() override { m_curSector = 1; m_waitPlaying = true, m_waitRecording = true; }
-	virtual void OnBallNavActive() override {
-		if (m_waitPlaying) {
-			StartPlaying();
-			m_waitPlaying = false;
-		}
-		if (m_waitRecording) {
-			StartRecording();
-			m_waitRecording = false;
-		}
-	};
+	virtual void OnStartLevel() override { m_curSector = 1; PreparePlaying(); PrepareRecording(); }
+	virtual void OnBallNavActive() override { StartPlaying(); StartRecording(); };
 	virtual void OnPauseLevel() override { PausePlaying(); PauseRecording(); m_sractive = false; }
 	virtual void OnUnpauseLevel() override { UnpausePlaying(); UnpauseRecording(); m_sractive = true; }
 	virtual void OnCounterActive() override { m_sractive = true; }
@@ -46,14 +38,15 @@ public:
 	virtual void OnBallOff() override {
 		if (m_deathreset->GetBoolean()) {
 			StopPlaying(); StopRecording();
-			m_waitPlaying = true, m_waitRecording = true;
+			PreparePlaying(); PrepareRecording();
 		}
 	}
 
 	virtual void OnLevelFinish() override { EndRecording(); }
 	virtual void OnPostNextLevel() override { StopPlaying(); }
 	virtual void OnPreCheckpointReached() override { StopPlaying(); EndRecording();
-		m_curSector = GetCurrentSector() + 1; StartPlaying(); StartRecording(); }
+		m_curSector = GetCurrentSector() + 1; PreparePlaying(); PrepareRecording(); }
+	virtual void OnPostCheckpointReached() override { StartPlaying(); StartRecording(); }
 
 	int GetHSScore();
 	float GetSRScore() { return m_srtimer; }
@@ -61,11 +54,13 @@ public:
 	int GetCurrentSector();
 	void SetCurrentBall(int curBall);
 
+	void PreparePlaying();
 	void StartPlaying();
 	void PausePlaying();
 	void UnpausePlaying();
 	void StopPlaying();
 
+	void PrepareRecording();
 	void StartRecording();
 	void PauseRecording();
 	void UnpauseRecording();
@@ -105,6 +100,8 @@ private:
 		std::vector<std::pair<int, int>> trafo;
 	};
 	Record m_record, m_play[2];
+	std::thread m_loadPlay;
+	bool m_loadingPlay = false;
 
 	IProperty* m_enabled, * m_hssr, * m_deathreset;
 

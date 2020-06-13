@@ -1,6 +1,7 @@
 #include "SpiritTrail.h"
 #include <ImageHlp.h>
 #include <filesystem>
+#include <thread>
 
 IMod* BMLEntry(IBML* bml) {
 	return new SpiritTrail(bml);
@@ -131,6 +132,8 @@ void SpiritTrail::OnLoadObject(CKSTRING filename, CKSTRING masterName, CK_CLASSI
 			}
 			m_balls.push_back(ball);
 		}
+
+		GetLogger()->Info("Created Spirit Balls");
 	}
 
 	if (!strcmp(filename, "3D Entities\\Gameplay.nmo")) {
@@ -144,10 +147,13 @@ void SpiritTrail::OnProcess() {
 	if (m_sractive)
 		m_srtimer += m_bml->GetTimeManager()->GetLastDeltaTime();
 
+	const float delta = 1000.0f / TICK_SPEED;
 	if (m_isRecording && !m_recordPaused) {
 		m_recordTimer += m_bml->GetTimeManager()->GetLastDeltaTime();
+		m_recordTimer = (std::min)(m_recordTimer, 1000.0f);
+
 		while (m_recordTimer > 0) {
-			m_recordTimer -= 1000.0f / TICK_SPEED;
+			m_recordTimer -= delta;
 
 			int curBall = GetCurrentBall();
 			if (curBall != m_curBall)
@@ -163,16 +169,22 @@ void SpiritTrail::OnProcess() {
 			}
 		}
 
-		if (m_bml->IsCheatEnabled())
+		if (m_bml->IsCheatEnabled()) {
 			StopRecording();
-		if (GetSRScore() > 1000 * 3600)
+		}
+
+		if (GetSRScore() > 1000 * 3600) {
+			GetLogger()->Info("Record is longer than 1 hour, stop recording");
 			StopRecording();
+		}
 	}
 
 	if (m_isPlaying && !m_playPaused) {
 		m_playTimer += m_bml->GetTimeManager()->GetLastDeltaTime();
+		m_playTimer = (std::min)(m_playTimer, 1000.0f);
+
 		while (m_playTimer > 0) {
-			m_playTimer -= 1000.0f / TICK_SPEED;
+			m_playTimer -= delta;
 
 			auto& trafos = m_play[m_playhssr].trafo;
 			if (m_playTrafo < trafos.size()) {
@@ -183,21 +195,25 @@ void SpiritTrail::OnProcess() {
 				}
 			}
 
-			auto& states = m_play[m_playhssr].states;
-			if (m_playFrame >= 0 && m_playFrame < states.size()) {
-				if (m_playBall >= 0 && m_playBall < m_balls.size()) {
-					CKObject* playerBall = m_curLevel->GetElementObject(0, 1);
-					CK3dObject* ball = m_balls[m_playBall].obj;
-					ball->Show(playerBall->IsVisible() ? CKSHOW : CKHIDE);
-					Record::State& state = states[m_playFrame];
-					ball->SetPosition(&state.pos);
-					ball->SetQuaternion(&state.rot);
-				}
-			}
-			else StopPlaying();
-
 			m_playFrame++;
 		}
+
+		auto& states = m_play[m_playhssr].states;
+		if (m_playFrame >= 0 && m_playFrame < states.size() - 1) {
+			if (m_playBall >= 0 && m_playBall < m_balls.size()) {
+				CKObject* playerBall = m_curLevel->GetElementObject(0, 1);
+				CK3dObject* ball = m_balls[m_playBall].obj;
+				ball->Show(playerBall->IsVisible() ? CKSHOW : CKHIDE);
+
+				float portion = (m_playTimer / delta + 1);
+				Record::State& cur = states[m_playFrame], & next = states[m_playFrame + 1];
+				VxVector position = (next.pos - cur.pos) * portion + cur.pos;
+				VxQuaternion rotation = Slerp(portion, cur.rot, next.rot);
+				ball->SetPosition(&position);
+				ball->SetQuaternion(&rotation);
+			}
+		}
+		else StopPlaying();
 	}
 }
 
@@ -235,37 +251,51 @@ void SpiritTrail::SetCurrentBall(int curBall) {
 		m_balls[m_playBall].obj->Show();
 }
 
-void SpiritTrail::StartPlaying() {
-	if (!m_isPlaying && m_enabled->GetBoolean()) {
-		std::string recfile[2] = { (m_recordDir + "hs" + std::to_string(m_curSector) + ".rec"),
-			(m_recordDir + "sr" + std::to_string(m_curSector) + ".rec") };
-		m_playhssr = m_hssr->GetBoolean();
-		for (int i = 0; i < 2; i++) {
-			if (std::filesystem::exists(recfile[i])) {
-				std::pair<char*, int> data = UncompressDataFromFile(recfile[i].c_str());
-				m_play[i].hsscore = *reinterpret_cast<int*>(data.first);
-				m_play[i].srscore = *reinterpret_cast<float*>(data.first + 4);
-				if (bool(i) == m_playhssr) {
-					int ssize = *reinterpret_cast<int*>(data.first + 8);
-					int tsize = *reinterpret_cast<int*>(data.first + 12);
-					m_play[i].states.resize(ssize);
-					memcpy(&m_play[i].states[0], data.first + 16, ssize * sizeof(Record::State));
-					m_play[i].trafo.resize(tsize);
-					memcpy(&m_play[i].trafo[0], data.first + 16 + ssize * sizeof(Record::State), tsize * sizeof(std::pair<int, int>));
+void SpiritTrail::PreparePlaying() {
+	if (!m_isPlaying && m_enabled->GetBoolean() && !m_waitPlaying) {
+		m_waitPlaying = true;
+
+		m_loadPlay = std::thread([this]() {
+			std::string recfile[2] = { (m_recordDir + "hs" + std::to_string(m_curSector) + ".rec"),
+				(m_recordDir + "sr" + std::to_string(m_curSector) + ".rec") };
+			m_playhssr = m_hssr->GetBoolean();
+
+			for (int i = 0; i < 2; i++) {
+				if (std::filesystem::exists(recfile[i])) {
+					std::pair<char*, int> data = UncompressDataFromFile(recfile[i].c_str());
+					m_play[i].hsscore = *reinterpret_cast<int*>(data.first);
+					m_play[i].srscore = *reinterpret_cast<float*>(data.first + 4);
+					if (bool(i) == m_playhssr) {
+						int ssize = *reinterpret_cast<int*>(data.first + 8);
+						int tsize = *reinterpret_cast<int*>(data.first + 12);
+						m_play[i].states.resize(ssize);
+						memcpy(&m_play[i].states[0], data.first + 16, ssize * sizeof(Record::State));
+						m_play[i].trafo.resize(tsize);
+						memcpy(&m_play[i].trafo[0], data.first + 16 + ssize * sizeof(Record::State), tsize * sizeof(std::pair<int, int>));
+					}
+
+					CKDeletePointer(data.first);
 				}
-
-				CKDeletePointer(data.first);
+				else {
+					m_play[i].hsscore = INT_MIN;
+					m_play[i].srscore = FLT_MAX;
+				}
 			}
-			else {
-				m_play[i].hsscore = INT_MIN;
-				m_play[i].srscore = FLT_MAX;
-			}
-		}
+			});
+	}
+}
 
-		if (m_play[m_playhssr].states.size() > 0) {
+void SpiritTrail::StartPlaying() {
+	if (!m_isPlaying && m_enabled->GetBoolean() && m_waitPlaying) {
+		m_waitPlaying = false;
+
+		if (m_loadPlay.joinable())
+			m_loadPlay.join();
+
+		if (m_play[m_playhssr].hsscore > INT_MIN) {
 			m_isPlaying = true;
 			m_playPaused = false;
-			m_playTimer = 0;
+			m_playTimer = -1000.0f / TICK_SPEED;
 			m_playFrame = 0;
 			m_playTrafo = 0;
 		}
@@ -295,11 +325,19 @@ void SpiritTrail::StopPlaying() {
 	}
 }
 
+void SpiritTrail::PrepareRecording() {
+	if (!m_isRecording && !m_bml->IsCheatEnabled() && m_enabled->GetBoolean() && !m_waitRecording) {
+		m_waitRecording = true;
+	}
+}
+
 void SpiritTrail::StartRecording() {
-	if (!m_isRecording && !m_bml->IsCheatEnabled() && m_enabled->GetBoolean()) {
+	if (!m_isRecording && !m_bml->IsCheatEnabled() && m_enabled->GetBoolean() && m_waitRecording) {
+		m_waitRecording = false;
 		m_isRecording = true;
 		m_recordPaused = false;
-		m_bml->AddTimer(2u, [this]() { m_startHS = GetHSScore(); });
+
+		m_startHS = GetHSScore();
 		m_recordTimer = 0;
 		m_srtimer = 0;
 		m_curBall = GetCurrentBall();
@@ -330,7 +368,9 @@ void SpiritTrail::EndRecording() {
 		m_record.hsscore = GetHSScore() - m_startHS;
 		m_record.srscore = GetSRScore();
 
-		if (m_record.hsscore > m_play[0].hsscore || m_record.srscore < m_play[1].srscore) {
+		bool savehs = m_record.hsscore > m_play[0].hsscore,
+			savesr = m_record.srscore < m_play[1].srscore;
+		if (savehs || savesr) {
 			int ssize = sizeof(Record::State) * m_record.states.size();
 			int tsize = sizeof(std::pair<int, int>) * m_record.trafo.size();
 			int size = 16 + ssize + tsize;
@@ -343,15 +383,26 @@ void SpiritTrail::EndRecording() {
 			memcpy(buffer + 16, &m_record.states[0], ssize);
 			memcpy(buffer + 16 + ssize, &m_record.trafo[0], tsize);
 
-			if (m_record.hsscore > m_play[0].hsscore) {
-				CompressDataToFile(buffer, size, (m_recordDir + "hs" + std::to_string(m_curSector) + ".rec").c_str());
-			}
+			std::string hspath = m_recordDir + "hs" + std::to_string(m_curSector) + ".rec",
+				srpath = m_recordDir + "sr" + std::to_string(m_curSector) + ".rec";
 
-			if (m_record.srscore < m_play[1].srscore) {
-				CompressDataToFile(buffer, size, (m_recordDir + "sr" + std::to_string(m_curSector) + ".rec").c_str());
-			}
+			std::thread([savehs, savesr, hspath, srpath, buffer, size]() {
+				if (savehs) {
+					CompressDataToFile(buffer, size, hspath.c_str());
+					if (savesr) {
+						std::filesystem::copy_file(hspath, srpath, std::filesystem::copy_options::overwrite_existing);
+					}
+				}
+				else {
+					CompressDataToFile(buffer, size, srpath.c_str());
+				}
+				delete[] buffer;
+				}).detach();
 
-			delete[] buffer;
+			if (savehs)
+				GetLogger()->Info("HS of sector %d has updated", m_curSector);
+			if (savesr)
+				GetLogger()->Info("SR of sector %d has updated", m_curSector);
 		}
 
 		StopRecording();
