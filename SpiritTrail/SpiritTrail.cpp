@@ -185,6 +185,7 @@ void SpiritTrail::OnProcess() {
 
 		while (m_playTimer > 0) {
 			m_playTimer -= delta;
+			m_playFrame++;
 
 			auto& trafos = m_play[m_playhssr].trafo;
 			if (m_playTrafo < trafos.size()) {
@@ -194,8 +195,6 @@ void SpiritTrail::OnProcess() {
 					m_playTrafo++;
 				}
 			}
-
-			m_playFrame++;
 		}
 
 		auto& states = m_play[m_playhssr].states;
@@ -297,7 +296,8 @@ void SpiritTrail::StartPlaying() {
 			m_playPaused = false;
 			m_playTimer = -1000.0f / TICK_SPEED;
 			m_playFrame = 0;
-			m_playTrafo = 0;
+			m_playTrafo = 1;
+			SetCurrentBall(m_play[m_playhssr].trafo[0].second);
 		}
 	}
 }
