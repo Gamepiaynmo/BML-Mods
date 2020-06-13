@@ -5,6 +5,8 @@ VisualStudioVersion = 16.0.29926.136
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SpiritTrail", "SpiritTrail\SpiritTrail.vcxproj", "{0CA227A0-AECF-4D89-8831-26D4B0C2B3A5}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DynamicFov", "DynamicFov\DynamicFov.vcxproj", "{C5204058-8645-4BA3-8A4A-381E3A1187E5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,14 @@ Global
 		{0CA227A0-AECF-4D89-8831-26D4B0C2B3A5}.Release|x64.Build.0 = Release|x64
 		{0CA227A0-AECF-4D89-8831-26D4B0C2B3A5}.Release|x86.ActiveCfg = Release|Win32
 		{0CA227A0-AECF-4D89-8831-26D4B0C2B3A5}.Release|x86.Build.0 = Release|Win32
+		{C5204058-8645-4BA3-8A4A-381E3A1187E5}.Debug|x64.ActiveCfg = Debug|x64
+		{C5204058-8645-4BA3-8A4A-381E3A1187E5}.Debug|x64.Build.0 = Debug|x64
+		{C5204058-8645-4BA3-8A4A-381E3A1187E5}.Debug|x86.ActiveCfg = Debug|Win32
+		{C5204058-8645-4BA3-8A4A-381E3A1187E5}.Debug|x86.Build.0 = Debug|Win32
+		{C5204058-8645-4BA3-8A4A-381E3A1187E5}.Release|x64.ActiveCfg = Release|x64
+		{C5204058-8645-4BA3-8A4A-381E3A1187E5}.Release|x64.Build.0 = Release|x64
+		{C5204058-8645-4BA3-8A4A-381E3A1187E5}.Release|x86.ActiveCfg = Release|Win32
+		{C5204058-8645-4BA3-8A4A-381E3A1187E5}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
