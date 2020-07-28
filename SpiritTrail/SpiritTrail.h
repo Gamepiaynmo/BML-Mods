@@ -38,7 +38,12 @@ public:
 	virtual void OnBallOff() override {
 		if (m_deathreset->GetBoolean()) {
 			StopPlaying(); StopRecording();
-			PreparePlaying(); PrepareRecording();
+
+			int lifes;
+			m_energy->GetElementValue(0, 1, &lifes);
+			if (lifes > 0) {
+				PreparePlaying(); PrepareRecording();
+			}
 		}
 	}
 

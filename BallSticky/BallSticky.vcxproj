@@ -11,16 +11,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DynamicFov.h" />
+    <ClInclude Include="BallSticky.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DynamicFov.cpp" />
+    <ClCompile Include="BallSticky.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{c5204058-8645-4ba3-8a4a-381e3a1187e5}</ProjectGuid>
-    <RootNamespace>DynamicFov</RootNamespace>
+    <ProjectGuid>{342cfce8-9da9-4014-b3b6-5607e91fd680}</ProjectGuid>
+    <RootNamespace>BallSticky</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -53,14 +53,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>D:\Program Files (x86)\Ballance\ModLoader\Mods\</OutDir>
+    <OutDir>D:\Program Files (x86)\Ballance\ModLoader\Mods\BallSticky\</OutDir>
     <TargetExt>.bmod</TargetExt>
     <IncludePath>$(BMLDIR)\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(BMLDIR)\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>D:\Program Files (x86)\Ballance\ModLoader\Mods\</OutDir>
+    <OutDir>D:\Program Files (x86)\Ballance\ModLoader\Mods\BallSticky\</OutDir>
     <TargetExt>.bmod</TargetExt>
     <IncludePath>$(BMLDIR)\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(BMLDIR)\lib;$(LibraryPath)</LibraryPath>
@@ -69,7 +69,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;DYNAMICFOV_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;BALLSTICKY_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -88,12 +88,11 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;DYNAMICFOV_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;BALLSTICKY_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

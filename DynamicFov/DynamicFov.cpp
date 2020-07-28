@@ -52,25 +52,27 @@ void DynamicFov::OnProcess() {
 	if (m_ingameScript && m_ingameCam && m_enabled->GetBoolean()) {
 		if (m_ingameScript->IsActive() && m_dynamicPos->IsActive() && !m_dynamicPos->IsOutputActive(1)) {
 			CK3dObject* ball = static_cast<CK3dObject*>(m_curLevel->GetElementObject(0, 1));
-			VxVector position;
-			ball->GetPosition(&position);
-			CKRenderContext* rc = m_bml->GetRenderContext();
+			if (ball != nullptr) {
+				VxVector position;
+				ball->GetPosition(&position);
+				CKRenderContext* rc = m_bml->GetRenderContext();
 
-			if (!m_isActive) {
+				if (!m_isActive) {
+					m_lastPos = position;
+					m_ingameCam->SetFov(0.75f * rc->GetWidth() / rc->GetHeight());
+				}
+				else {
+					float delta = m_bml->GetTimeManager()->GetLastDeltaTime();
+					float speed = (position - m_lastPos).Magnitude() / delta * 6;
+					float newfov = (0.75f + speed) * rc->GetWidth() / rc->GetHeight();
+					newfov = (std::min)(newfov, PI / 2);
+					float curfov = m_ingameCam->GetFov();
+					m_ingameCam->SetFov((newfov - curfov) * (std::min)(delta, 20.0f) / 1000 + curfov);
+				}
+
+				m_isActive = true;
 				m_lastPos = position;
-				m_ingameCam->SetFov(0.75f * rc->GetWidth() / rc->GetHeight());
 			}
-			else {
-				float delta = m_bml->GetTimeManager()->GetLastDeltaTime();
-				float speed = (position - m_lastPos).Magnitude() / delta * 6;
-				float newfov = (0.75f + speed) * rc->GetWidth() / rc->GetHeight();
-				newfov = (std::min)(newfov, PI / 2);
-				float curfov = m_ingameCam->GetFov();
-				m_ingameCam->SetFov((newfov - curfov) * (std::min)(delta, 20.0f) / 1000 + curfov);
-			}
-
-			m_isActive = true;
-			m_lastPos = position;
 		}
 		else if (!m_wasPaused) {
 			m_isActive = false;

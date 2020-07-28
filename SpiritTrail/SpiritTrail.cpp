@@ -1,5 +1,4 @@
 #include "SpiritTrail.h"
-#include <ImageHlp.h>
 #include <filesystem>
 #include <thread>
 
@@ -70,7 +69,7 @@ void CompressDataToFile(char* data, int size, const char* filename) {
 }
 
 void SpiritTrail::OnLoad() {
-	MakeSureDirectoryPathExists("..\\ModLoader\\Trails\\");
+	std::filesystem::create_directories("..\\ModLoader\\Trails\\");
 
 	GetConfig()->SetCategoryComment("Misc", "Miscellaneous");
 	m_enabled = GetConfig()->GetProperty("Misc", "Enable");
@@ -96,7 +95,7 @@ void SpiritTrail::OnLoadObject(CKSTRING filename, CKSTRING masterName, CK_CLASSI
 			XString filepath = filename;
 			m_bml->GetPathManager()->ResolveFileName(filepath, DATA_PATH_IDX);
 			m_recordDir = "..\\ModLoader\\Trails\\" + GetFileHash(filepath.CStr()) + "\\";
-			MakeSureDirectoryPathExists(m_recordDir.c_str());
+			std::filesystem::create_directories(m_recordDir.c_str());
 		}
 	}
 
