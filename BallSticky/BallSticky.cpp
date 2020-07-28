@@ -41,7 +41,7 @@ void BallSticky::OnProcess() {
 	}
 }
 
-void BallSticky::OnLoadObject(CKSTRING filename, CKSTRING masterName, CK_CLASSID filterClass,
+void BallSticky::OnLoadObject(CKSTRING filename, BOOL isMap, CKSTRING masterName, CK_CLASSID filterClass,
 	BOOL addtoscene, BOOL reuseMeshes, BOOL reuseMaterials, BOOL dynamic,
 	XObjectArray* objArray, CKObject* masterObj) {
 	if (!strcmp(filename, "3D Entities\\Levelinit.nmo"))
@@ -54,9 +54,9 @@ void BallSticky::OnLoadScript(CKSTRING filename, CKBehavior* script) {
 }
 
 void BallSticky::OnLoadLevelinit(XObjectArray* objArray) {
-	CKDataArray* allLevel = m_bml->GetArrayByName("AllLevel");
-	for (int i = 0; i < allLevel->GetRowCount(); i++)
-		allLevel->SetElementStringValue(i, 1, "Ball_Sticky");
+	// CKDataArray* allLevel = m_bml->GetArrayByName("AllLevel");
+	// for (int i = 0; i < allLevel->GetRowCount(); i++)
+	// 	allLevel->SetElementStringValue(i, 1, "Ball_Sticky");
 }
 
 void BallSticky::OnEditScript_Gameplay_Ingame(CKBehavior* script) {

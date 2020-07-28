@@ -85,18 +85,16 @@ void SpiritTrail::OnLoad() {
 	m_deathreset->SetDefaultBoolean(true);
 }
 
-void SpiritTrail::OnLoadObject(CKSTRING filename, CKSTRING masterName, CK_CLASSID filterClass,
+void SpiritTrail::OnLoadObject(CKSTRING filename, BOOL isMap, CKSTRING masterName, CK_CLASSID filterClass,
 	BOOL addtoscene, BOOL reuseMeshes, BOOL reuseMaterials, BOOL dynamic,
 	XObjectArray* objArray, CKObject* masterObj) {
 	std::string mapDirs[] = { "3D Entities\\Level\\", "..\\ModLoader\\Maps\\" };
-	for (auto& dir : mapDirs) {
-		if (!strncmp(filename, dir.c_str(), dir.size())) {
-			m_curMap = filename;
-			XString filepath = filename;
-			m_bml->GetPathManager()->ResolveFileName(filepath, DATA_PATH_IDX);
-			m_recordDir = "..\\ModLoader\\Trails\\" + GetFileHash(filepath.CStr()) + "\\";
-			std::filesystem::create_directories(m_recordDir.c_str());
-		}
+	if (isMap) {
+		m_curMap = filename;
+		XString filepath = filename;
+		m_bml->GetPathManager()->ResolveFileName(filepath, DATA_PATH_IDX);
+		m_recordDir = "..\\ModLoader\\Trails\\" + GetFileHash(filepath.CStr()) + "\\";
+		std::filesystem::create_directories(m_recordDir.c_str());
 	}
 
 	if (!strcmp(filename, "3D Entities\\Balls.nmo")) {

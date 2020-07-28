@@ -18,11 +18,12 @@ public:
 	virtual CKSTRING GetName() override { return "Spirit Trail"; }
 	virtual CKSTRING GetAuthor() override { return "Gamepiaynmo"; }
 	virtual CKSTRING GetDescription() override { return "Play the historical best record as a translucent ball."; }
+	DECLARE_BML_VERSION;
 
 	virtual void OnLoad() override;
-	virtual void OnLoadObject(CKSTRING filename, CKSTRING masterName, CK_CLASSID filterClass,
-		BOOL addtoscene, BOOL reuseMeshes, BOOL reuseMaterials, BOOL dynamic,
-		XObjectArray* objArray, CKObject* masterObj) override;
+	virtual void OnLoadObject(CKSTRING filename, BOOL isMap, CKSTRING masterName,
+		CK_CLASSID filterClass, BOOL addtoscene, BOOL reuseMeshes, BOOL reuseMaterials,
+		BOOL dynamic, XObjectArray* objArray, CKObject* masterObj) override;
 	virtual void OnProcess() override;
 
 	virtual void OnStartLevel() override { m_curSector = 1; PreparePlaying(); PrepareRecording(); }

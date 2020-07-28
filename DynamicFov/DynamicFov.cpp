@@ -26,7 +26,7 @@ void DynamicFov::OnLoad() {
 	m_enabled->SetDefaultBoolean(true);
 }
 
-void DynamicFov::OnLoadObject(CKSTRING filename, CKSTRING masterName, CK_CLASSID filterClass,
+void DynamicFov::OnLoadObject(CKSTRING filename, BOOL isMap, CKSTRING masterName, CK_CLASSID filterClass,
 	BOOL addtoscene, BOOL reuseMeshes, BOOL reuseMaterials, BOOL dynamic,
 	XObjectArray* objArray, CKObject* masterObj) {
 	if (!strcmp(filename, "3D Entities\\Camera.nmo")) {

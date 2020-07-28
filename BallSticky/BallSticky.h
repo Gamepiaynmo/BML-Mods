@@ -15,11 +15,12 @@ public:
 	virtual CKSTRING GetName() override { return "Ball Sticky"; }
 	virtual CKSTRING GetAuthor() override { return "Gamepiaynmo"; }
 	virtual CKSTRING GetDescription() override { return "Add a new ball type that can climb walls."; }
+	DECLARE_BML_VERSION;
 
 	virtual void OnLoad() override;
-	virtual void OnLoadObject(CKSTRING filename, CKSTRING masterName, CK_CLASSID filterClass,
-		BOOL addtoscene, BOOL reuseMeshes, BOOL reuseMaterials, BOOL dynamic,
-		XObjectArray* objArray, CKObject* masterObj) override;
+	virtual void OnLoadObject(CKSTRING filename, BOOL isMap, CKSTRING masterName,
+		CK_CLASSID filterClass, BOOL addtoscene, BOOL reuseMeshes, BOOL reuseMaterials,
+		BOOL dynamic, XObjectArray* objArray, CKObject* masterObj) override;
 	virtual void OnLoadScript(CKSTRING filename, CKBehavior* script) override;
 	virtual void OnProcess() override;
 
