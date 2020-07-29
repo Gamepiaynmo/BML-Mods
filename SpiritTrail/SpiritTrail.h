@@ -27,7 +27,7 @@ public:
 	virtual void OnProcess() override;
 
 	virtual void OnStartLevel() override { m_curSector = 1; PreparePlaying(); PrepareRecording(); }
-	virtual void OnBallNavActive() override { StartPlaying(); StartRecording(); };
+	virtual void OnBallNavActive() override { StartPlaying(); StartRecording(); }
 	virtual void OnPauseLevel() override { PausePlaying(); PauseRecording(); m_sractive = false; }
 	virtual void OnUnpauseLevel() override { UnpausePlaying(); UnpauseRecording(); m_sractive = true; }
 	virtual void OnCounterActive() override { m_sractive = true; }
@@ -35,16 +35,16 @@ public:
 
 	virtual void OnPostResetLevel() override { StopPlaying(); StopRecording(); }
 	virtual void OnPostExitLevel() override { StopPlaying(); StopRecording(); }
-	virtual void OnGameOver() override { StopPlaying(); StopRecording(); }
 	virtual void OnBallOff() override {
-		if (m_deathreset->GetBoolean()) {
-			StopPlaying(); StopRecording();
-
-			int lifes;
-			m_energy->GetElementValue(0, 1, &lifes);
-			if (lifes > 0) {
-				PreparePlaying(); PrepareRecording();
-			}
+		int lifes;
+		m_energy->GetElementValue(0, 1, &lifes);
+		if (m_deathreset->GetBoolean() || lifes <= 0) {
+			m_bml->AddTimer(1000.0f, [this, lifes]() {
+				StopPlaying(); StopRecording();
+				if (lifes > 0) {
+					PreparePlaying(); PrepareRecording();
+				}
+				});
 		}
 	}
 
@@ -116,7 +116,7 @@ private:
 		CK3dObject* obj;
 		std::vector<CKMaterial*> materials;
 	};
-	std::vector<SpiritBall> m_balls;
+	std::vector<SpiritBall> m_dualBalls;
 
 	CKDataArray* m_energy, * m_curLevel, * m_ingameParam;
 	float m_srtimer;

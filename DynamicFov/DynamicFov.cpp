@@ -49,7 +49,8 @@ void DynamicFov::OnLoadScript(CKSTRING filename, CKBehavior* script) {
 }
 
 void DynamicFov::OnProcess() {
-	if (m_ingameScript && m_ingameCam && m_enabled->GetBoolean()) {
+	if (m_ingameScript && m_ingameCam && m_enabled->GetBoolean()
+		&& m_bml->Get3dObjectByName("PS_FourFlames_01_Dual") == nullptr) {
 		if (m_ingameScript->IsActive() && m_dynamicPos->IsActive() && !m_dynamicPos->IsOutputActive(1)) {
 			CK3dObject* ball = static_cast<CK3dObject*>(m_curLevel->GetElementObject(0, 1));
 			if (ball != nullptr) {

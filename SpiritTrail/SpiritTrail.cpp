@@ -101,7 +101,7 @@ void SpiritTrail::OnLoadObject(CKSTRING filename, BOOL isMap, CKSTRING masterNam
 		CKDataArray* physBall = m_bml->GetArrayByName("Physicalize_GameBall");
 		for (int i = 0; i < physBall->GetRowCount(); i++) {
 			SpiritBall ball;
-			ball.name.insert(0, physBall->GetElementStringValue(i, 0, nullptr), '\0');
+			ball.name.resize(physBall->GetElementStringValue(i, 0, nullptr), '\0');
 			physBall->GetElementStringValue(i, 0, &ball.name[0]);
 			ball.name.pop_back();
 			ball.obj = m_bml->Get3dObjectByName(ball.name.c_str());
@@ -127,7 +127,7 @@ void SpiritTrail::OnLoadObject(CKSTRING filename, BOOL isMap, CKSTRING masterNam
 					m_bml->SetIC(mat);
 				}
 			}
-			m_balls.push_back(ball);
+			m_dualBalls.push_back(ball);
 		}
 
 		GetLogger()->Info("Created Spirit Balls");
@@ -196,9 +196,9 @@ void SpiritTrail::OnProcess() {
 
 		auto& states = m_play[m_playhssr].states;
 		if (m_playFrame >= 0 && m_playFrame < states.size() - 1) {
-			if (m_playBall >= 0 && m_playBall < m_balls.size()) {
+			if (m_playBall >= 0 && m_playBall < m_dualBalls.size()) {
 				CKObject* playerBall = m_curLevel->GetElementObject(0, 1);
-				CK3dObject* ball = m_balls[m_playBall].obj;
+				CK3dObject* ball = m_dualBalls[m_playBall].obj;
 				ball->Show(playerBall->IsVisible() ? CKSHOW : CKHIDE);
 
 				float portion = (m_playTimer / delta + 1);
@@ -224,8 +224,8 @@ int SpiritTrail::GetCurrentBall() {
 	CKObject* ball = m_curLevel->GetElementObject(0, 1);
 	if (ball) {
 		std::string ballName = ball->GetName();
-		for (size_t i = 0; i < m_balls.size(); i++) {
-			if (m_balls[i].name == ballName)
+		for (size_t i = 0; i < m_dualBalls.size(); i++) {
+			if (m_dualBalls[i].name == ballName)
 				return i;
 		}
 	}
@@ -241,10 +241,10 @@ int SpiritTrail::GetCurrentSector() {
 
 void SpiritTrail::SetCurrentBall(int curBall) {
 	m_playBall = curBall;
-	for (auto& ball : m_balls)
+	for (auto& ball : m_dualBalls)
 		ball.obj->Show(CKHIDE);
-	if (m_playBall >= 0 && m_playBall < m_balls.size())
-		m_balls[m_playBall].obj->Show();
+	if (m_playBall >= 0 && m_playBall < m_dualBalls.size())
+		m_dualBalls[m_playBall].obj->Show();
 }
 
 void SpiritTrail::PreparePlaying() {
@@ -317,7 +317,7 @@ void SpiritTrail::StopPlaying() {
 			m_play[i].trafo.shrink_to_fit();
 		}
 
-		for (auto& ball : m_balls)
+		for (auto& ball : m_dualBalls)
 			ball.obj->Show(CKHIDE);
 	}
 }
