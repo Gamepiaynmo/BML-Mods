@@ -116,11 +116,14 @@ void DualBallControl::OnEditScript_Gameplay_Ingame(CKBehavior* script) {
 	m_setNewBall = ScriptHelper::FindFirstBB(trafoMgr, "set new Ball");
 	CKBehavior* sop = ScriptHelper::FindFirstBB(m_setNewBall, "Switch On Parameter");
 	m_curTrafo = sop->GetInputParameter(0)->GetDirectSource();
+	CKBehavior* gnig = ScriptHelper::FindFirstBB(trafoMgr, "Get Nearest In Group");
+	m_nearestTrafo = gnig->GetOutputParameter(1);
 }
 
 void DualBallControl::OnProcess() {
 	if (m_bml->IsPlaying() && m_dualActive) {
-		if (m_bml->GetInputManager()->IsKeyPressed(m_switchKey->GetKey()) && m_switchProgress <= 0 && m_ballNavActive) {
+		if (m_bml->GetInputManager()->IsKeyPressed(m_switchKey->GetKey()) && m_switchProgress <= 0
+			&& m_ballNavActive && ScriptHelper::GetParamValue<float>(m_nearestTrafo) > 4.3) {
 			CKMessageManager* mm = m_bml->GetMessageManager();
 			CKMessageType ballDeact = mm->AddMessageType("BallNav deactivate");
 

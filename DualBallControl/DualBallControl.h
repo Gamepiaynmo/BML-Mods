@@ -37,7 +37,7 @@ public:
 	virtual void OnBallNavActive() override { m_ballNavActive = true; }
 	virtual void OnBallNavInactive() override { m_ballNavActive = false; }
 
-	virtual void OnPostResetLevel() override { if (m_dualActive) { ReleaseDualBall(); } }
+	virtual void OnPostResetLevel() override { if (m_dualActive) { ReleaseDualBall(); m_dualBallType = 2; } }
 	virtual void OnPostExitLevel() override { if (m_dualActive) { ReleaseDualBall(); ReleaseLevel(); } }
 	virtual void OnPostNextLevel() override { if (m_dualActive) { ReleaseDualBall(); ReleaseLevel(); } }
 	virtual void OnBallOff() override {
@@ -87,5 +87,5 @@ private:
 	CK3dEntity* m_camTarget, * m_camMF, * m_camPos;
 	CKTargetCamera* m_ingameCam;
 	CKBehavior* m_setNewBall, * m_dynamicPos, * m_deactBall;
-	CKParameter* m_curTrafo;
+	CKParameter* m_curTrafo, * m_nearestTrafo;
 };

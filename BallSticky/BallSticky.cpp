@@ -13,7 +13,7 @@ IMod* BMLEntry(IBML* bml) {
 
 void BallSticky::OnLoad() {
 	m_stickyImpulse = 90.0f;
-	m_bml->RegisterBallType("Ball_Sticky.nmo", "sticky", "Sticky", "Ball_Sticky", 10.0f, 0.0f, 1.4f, "Ball", 0.8f, 7.0f, 0.12f, 2.0f);
+	m_bml->RegisterBallType("Ball_Sticky.nmo", "sticky", "Sticky", "Ball_Sticky", 10.0f, 0.0f, 1.4f, "Ball", 1.0f, 7.0f, 0.15f, 2.0f);
 	m_bml->RegisterModulBall("P_Ball_Sticky", false, 10.0f, 0.0f, 1.4f, "", false, true, false, 0.8f, 7.0f, 2.0f);
 	m_bml->RegisterTrafo("P_Trafo_Sticky");
 
