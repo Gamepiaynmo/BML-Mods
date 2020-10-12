@@ -52,8 +52,12 @@ void MapScripts::OnLoadObject(CKSTRING filename, BOOL isMap, CKSTRING masterName
 
 #define ACT_SCRIPT(FUNC) { \
 	CKBehavior* script = mapScripts[func_addr(&MapScripts::FUNC)]; \
-	if (script != nullptr) \
-		m_bml->GetCKContext()->GetCurrentScene()->Activate(script, true); \
+	if (script != nullptr) { \
+		CKBeObject* obj = script->GetOwner(); \
+		CKScene* scene = m_bml->GetCKContext()->GetCurrentScene(); \
+		scene->Activate(obj, false); \
+		scene->Activate(script, true); \
+	} \
 }
 
 void MapScripts::OnPostLoadLevel() {

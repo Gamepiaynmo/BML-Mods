@@ -88,7 +88,6 @@ void SpiritTrail::OnLoad() {
 void SpiritTrail::OnLoadObject(CKSTRING filename, BOOL isMap, CKSTRING masterName, CK_CLASSID filterClass,
 	BOOL addtoscene, BOOL reuseMeshes, BOOL reuseMaterials, BOOL dynamic,
 	XObjectArray* objArray, CKObject* masterObj) {
-	std::string mapDirs[] = { "3D Entities\\Level\\", "..\\ModLoader\\Maps\\" };
 	if (isMap) {
 		m_curMap = filename;
 		XString filepath = filename;

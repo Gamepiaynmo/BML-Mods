@@ -56,14 +56,14 @@
     <OutDir>D:\Program Files (x86)\Ballance\ModLoader\Mods\</OutDir>
     <TargetExt>.bmod</TargetExt>
     <IncludePath>$(BMLDIR)\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(BMLDIR)\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(BMLDIR)\lib\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>D:\Program Files (x86)\Ballance\ModLoader\Mods\</OutDir>
     <TargetExt>.bmod</TargetExt>
     <IncludePath>$(BMLDIR)\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(BMLDIR)\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(BMLDIR)\lib\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
