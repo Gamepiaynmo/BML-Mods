@@ -6,6 +6,66 @@ extern "C" {
 	__declspec(dllexport) IMod* BMLEntry(IBML* bml);
 }
 
+struct KeyState {
+	unsigned key_up : 1;
+	unsigned key_down : 1;
+	unsigned key_left : 1;
+	unsigned key_right : 1;
+	unsigned key_shift : 1;
+	unsigned key_space : 1;
+	unsigned key_q : 1;
+	unsigned key_esc : 1;
+	unsigned key_enter : 1;
+};
+
+struct FrameData {
+	FrameData() {}
+	FrameData(float deltaTime) : deltaTime(deltaTime) {
+		keyStates = 0;
+	}
+
+	float deltaTime;
+	union {
+		KeyState keyState;
+		int keyStates;
+	};
+};
+
+class GuiTASList : public BGui::Gui {
+public:
+	GuiTASList();
+	void Init(int size, int maxsize);
+	void Resize(int size);
+	void RefreshRecords();
+
+	virtual BGui::Button* CreateButton(int index);
+	virtual const std::string GetButtonText(int index);
+	virtual void SetPage(int page);
+	virtual void Exit();
+
+	virtual void SetVisible(bool visible) override;
+	bool IsVisible() { return m_visible; }
+
+	void PreviousPage() { if (m_curpage > 0) SetPage(m_curpage - 1); }
+	void NextPage() { if (m_curpage < m_maxpage - 1) SetPage(m_curpage + 1); }
+
+protected:
+	std::vector<BGui::Button*> m_buttons;
+	int m_curpage, m_maxpage, m_size, m_maxsize;
+	BGui::Button* m_left, * m_right;
+
+	struct TASInfo {
+		std::string displayname, filepath;
+		bool operator <(const TASInfo& o) {
+			return displayname < o.displayname;
+		}
+	};
+
+	std::vector<TASInfo> m_records;
+	std::vector<BGui::Text*> m_texts;
+	bool m_visible;
+};
+
 class TASSupport : public IMod {
 public:
 	TASSupport(IBML* bml) : IMod(bml) {}
@@ -25,13 +85,38 @@ public:
 	virtual void OnLoadScript(CKSTRING filename, CKBehavior* script) override;
 	virtual void OnProcess() override;
 
-	virtual void OnPreLoadLevel() override;
-	virtual void OnStartLevel() override;
+	virtual void OnPreLoadLevel() { OnStart(); }
+	virtual void OnPreResetLevel() { OnStop(); }
+	virtual void OnPreExitLevel() { OnStop(); }
+	virtual void OnLevelFinish() { OnFinish(); }
 
-	static int HookPhysicalize(const CKBehaviorContext& behcontext);
+	virtual void OnPhysicalize(CK3dEntity* target, CKBOOL fixed, float friction, float elasticity, float mass,
+		CKSTRING collGroup, CKBOOL startFrozen, CKBOOL enableColl, CKBOOL calcMassCenter, float linearDamp,
+		float rotDamp, CKSTRING collSurface, VxVector massCenter, int convexCnt, CKMesh** convexMesh,
+		int ballCnt, VxVector* ballCenter, float* ballRadius, int concaveCnt, CKMesh** concaveMesh) override;
+	virtual void OnUnphysicalize(CK3dEntity* target) override;
 
 	ILogger* Logger() { return GetLogger(); }
+	IBML* GetBML() { return m_bml; }
 
-private:
+	void OnStart();
+	void OnStop();
+	void OnFinish();
+	void LoadTAS(const std::string& filename);
+
 	CKDataArray* m_curLevel;
+
+	IProperty* m_enabled, * m_record, * m_stopKey;
+	bool m_readyToPlay = false;
+
+	bool m_recording = false, m_playing = false;
+	int m_curFrame;
+	std::vector<FrameData> m_recordData;
+	std::string m_mapName;
+
+	CK2dEntity* m_level01;
+	CKBehavior* m_exitStart;
+	BGui::Gui* m_tasEntryGui = nullptr;
+	BGui::Button* m_tasEntry;
+	GuiTASList* m_tasListGui = nullptr;
 };

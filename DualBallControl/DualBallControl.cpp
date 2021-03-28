@@ -162,8 +162,8 @@ void DualBallControl::OnProcess() {
 
 					m_bml->AddTimerLoop(1u, [this, position, dualPosition, camPosition]() {
 						if (m_switchProgress < 0) {
-							m_camTarget->SetPosition(&position);
-							m_ingameCam->SetPosition(&camPosition, m_camPos);
+							m_camTarget->SetPosition(position);
+							m_ingameCam->SetPosition(camPosition, m_camPos);
 
 							m_dynamicPos->ActivateInput(0);
 							m_dynamicPos->Activate();
@@ -172,8 +172,8 @@ void DualBallControl::OnProcess() {
 						else {
 							float progress = m_switchProgress * m_switchProgress * m_switchProgress;
 							VxVector midPos = (dualPosition - position) * progress + position;
-							m_camTarget->SetPosition(&midPos);
-							m_ingameCam->SetPosition(&camPosition, m_camPos);
+							m_camTarget->SetPosition(midPos);
+							m_ingameCam->SetPosition(camPosition, m_camPos);
 						}
 
 						m_switchProgress -= m_bml->GetTimeManager()->GetLastDeltaTime() / 200;
@@ -260,14 +260,14 @@ void DualBallControl::OnPostLoadLevel() {
 			return newFlame;
 		};
 
-		createFlame()->SetPosition(&VxVector(7.3338f, 2.0526f, 6.1448f), m_dualFlames[0]);
-		createFlame()->SetPosition(&VxVector(-7.2214f, 2.0526f, 6.1448f), m_dualFlames[0]);
-		createFlame()->SetPosition(&VxVector(-7.2214f, 2.0526f, -6.1318f), m_dualFlames[0]);
-		createFlame()->SetPosition(&VxVector(7.3338f, 2.0526f, -6.1318f), m_dualFlames[0]);
+		createFlame()->SetPosition(VxVector(7.3338f, 2.0526f, 6.1448f), m_dualFlames[0]);
+		createFlame()->SetPosition(VxVector(-7.2214f, 2.0526f, 6.1448f), m_dualFlames[0]);
+		createFlame()->SetPosition(VxVector(-7.2214f, 2.0526f, -6.1318f), m_dualFlames[0]);
+		createFlame()->SetPosition(VxVector(7.3338f, 2.0526f, -6.1318f), m_dualFlames[0]);
 
 		for (auto i = 1u; i < m_dualFlames.size(); i++) {
-			createFlame()->SetPosition(&VxVector(0.0400f, 2.0526f, -6.9423f), m_dualFlames[i]);
-			createFlame()->SetPosition(&VxVector(0.0392f, 2.0526f, 7.0605f), m_dualFlames[i]);
+			createFlame()->SetPosition(VxVector(0.0400f, 2.0526f, -6.9423f), m_dualFlames[i]);
+			createFlame()->SetPosition(VxVector(0.0392f, 2.0526f, 7.0605f), m_dualFlames[i]);
 		}
 	}
 }

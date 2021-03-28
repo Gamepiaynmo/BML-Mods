@@ -30,9 +30,9 @@ void BallSticky::OnProcess() {
 			VxVector pos;
 			curBall->GetPosition(&pos);
 			pos.y += 1;
-			m_ballRef[0]->SetPosition(&pos);
+			m_ballRef[0]->SetPosition(pos);
 			pos.y -= 2;
-			m_ballRef[1]->SetPosition(&pos);
+			m_ballRef[1]->SetPosition(pos);
 
 			bool isSticky = !strcmp(curBall->GetName(), "Ball_Sticky");
 			SetParamValue(m_stickyForce[0], isSticky ? m_stickyImpulse : 0);

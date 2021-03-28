@@ -204,8 +204,8 @@ void SpiritTrail::OnProcess() {
 				Record::State& cur = states[m_playFrame], & next = states[m_playFrame + 1];
 				VxVector position = (next.pos - cur.pos) * portion + cur.pos;
 				VxQuaternion rotation = Slerp(portion, cur.rot, next.rot);
-				ball->SetPosition(&position);
-				ball->SetQuaternion(&rotation);
+				ball->SetPosition(position);
+				ball->SetQuaternion(rotation);
 			}
 		}
 		else StopPlaying();
