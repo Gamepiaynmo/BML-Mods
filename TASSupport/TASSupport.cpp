@@ -114,13 +114,13 @@ public:
 			if (g_mod->m_curFrame < g_mod->m_recordData.size()) {
 				KeyState state = g_mod->m_recordData[g_mod->m_curFrame++].keyState;
 				BYTE* stateBuf = GetKeyboardState();
-				stateBuf[CKKEY_UP] = state.key_up;
-				stateBuf[CKKEY_DOWN] = state.key_down;
-				stateBuf[CKKEY_LEFT] = state.key_left;
-				stateBuf[CKKEY_RIGHT] = state.key_right;
+				stateBuf[g_mod->m_key_up] = state.key_up;
+				stateBuf[g_mod->m_key_down] = state.key_down;
+				stateBuf[g_mod->m_key_left] = state.key_left;
+				stateBuf[g_mod->m_key_right] = state.key_right;
 				stateBuf[CKKEY_Q] = state.key_q;
-				stateBuf[CKKEY_LSHIFT] = state.key_shift;
-				stateBuf[CKKEY_SPACE] = state.key_space;
+				stateBuf[g_mod->m_key_shift] = state.key_shift;
+				stateBuf[g_mod->m_key_space] = state.key_space;
 				stateBuf[CKKEY_ESCAPE] = state.key_esc;
 			}
 			else {
@@ -131,13 +131,13 @@ public:
 		if (g_mod->m_recording) {
 			KeyState state;
 			BYTE* stateBuf = GetKeyboardState();
-			state.key_up = stateBuf[CKKEY_UP];
-			state.key_down = stateBuf[CKKEY_DOWN];
-			state.key_left = stateBuf[CKKEY_LEFT];
-			state.key_right = stateBuf[CKKEY_RIGHT];
+			state.key_up = stateBuf[g_mod->m_key_up];
+			state.key_down = stateBuf[g_mod->m_key_down];
+			state.key_left = stateBuf[g_mod->m_key_left];
+			state.key_right = stateBuf[g_mod->m_key_right];
 			state.key_q = stateBuf[CKKEY_Q];
-			state.key_shift = stateBuf[CKKEY_LSHIFT];
-			state.key_space = stateBuf[CKKEY_SPACE];
+			state.key_shift = stateBuf[g_mod->m_key_shift];
+			state.key_space = stateBuf[g_mod->m_key_space];
 			state.key_esc = stateBuf[CKKEY_ESCAPE];
 			g_mod->m_recordData.rbegin()->keyState = state;
 		}
@@ -262,6 +262,7 @@ void TASSupport::OnLoadObject(CKSTRING filename, BOOL isMap, CKSTRING masterName
 		m_level01 = m_bml->Get2dEntityByName("M_Start_But_01");
 		CKBehavior* menuMain = m_bml->GetScriptByName("Menu_Start");
 		m_exitStart = ScriptHelper::FindFirstBB(menuMain, "Exit");
+		m_keyboard = m_bml->GetArrayByName("Keyboard");
 	}
 
 	if (isMap) {
@@ -398,6 +399,15 @@ void TASSupport::OnStart() {
 			*reinterpret_cast<DWORD*>(timer + 0x138) = 0;
 			*reinterpret_cast<double*>(*reinterpret_cast<BYTE**>(timer + 0x4) + 0x18) = 0;
 			});
+
+		if (m_keyboard) {
+			m_keyboard->GetElementValue(0, 0, &m_key_up);
+			m_keyboard->GetElementValue(0, 1, &m_key_down);
+			m_keyboard->GetElementValue(0, 2, &m_key_left);
+			m_keyboard->GetElementValue(0, 3, &m_key_right);
+			m_keyboard->GetElementValue(0, 4, &m_key_shift);
+			m_keyboard->GetElementValue(0, 5, &m_key_space);
+		}
 
 		if (m_readyToPlay) {
 			m_readyToPlay = false;

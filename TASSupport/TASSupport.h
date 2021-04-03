@@ -104,7 +104,13 @@ public:
 	void OnFinish();
 	void LoadTAS(const std::string& filename);
 
-	CKDataArray* m_curLevel;
+	CKDataArray* m_curLevel, * m_keyboard = nullptr;
+	CKKEYBOARD m_key_up = CKKEY_UP,
+		m_key_down = CKKEY_DOWN,
+		m_key_left = CKKEY_LEFT,
+		m_key_right = CKKEY_RIGHT,
+		m_key_shift = CKKEY_LSHIFT,
+		m_key_space = CKKEY_SPACE;
 
 	IProperty* m_enabled, * m_record, * m_stopKey;
 	bool m_readyToPlay = false;
