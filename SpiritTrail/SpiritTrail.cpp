@@ -74,7 +74,7 @@ void SpiritTrail::OnLoad() {
 	GetConfig()->SetCategoryComment("Misc", "Miscellaneous");
 	m_enabled = GetConfig()->GetProperty("Misc", "Enable");
 	m_enabled->SetComment("Enable Spirit Trail");
-	m_enabled->SetDefaultBoolean(true);
+	m_enabled->SetDefaultBoolean(false);
 
 	m_hssr = GetConfig()->GetProperty("Misc", "HS_SR");
 	m_hssr->SetComment("Play HS(No) or SR(Yes) record");

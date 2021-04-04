@@ -209,7 +209,7 @@ void TASSupport::OnLoad() {
 
 	m_record = GetConfig()->GetProperty("Misc", "Record");
 	m_record->SetComment("Record Actions");
-	m_record->SetDefaultBoolean(true);
+	m_record->SetDefaultBoolean(false);
 
 	m_stopKey = GetConfig()->GetProperty("Misc", "StopKey");
 	m_stopKey->SetComment("Key for stop playing");

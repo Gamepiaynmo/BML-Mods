@@ -23,7 +23,7 @@ void DynamicFov::OnLoad() {
 	GetConfig()->SetCategoryComment("Misc", "Miscellaneous");
 	m_enabled = GetConfig()->GetProperty("Misc", "Enable");
 	m_enabled->SetComment("Enable Dynamic Fov");
-	m_enabled->SetDefaultBoolean(true);
+	m_enabled->SetDefaultBoolean(false);
 }
 
 void DynamicFov::OnLoadObject(CKSTRING filename, BOOL isMap, CKSTRING masterName, CK_CLASSID filterClass,
