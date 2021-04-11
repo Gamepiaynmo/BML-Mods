@@ -85,16 +85,19 @@ public:
 	virtual void OnLoadScript(CKSTRING filename, CKBehavior* script) override;
 	virtual void OnProcess() override;
 
-	virtual void OnPreLoadLevel() { OnStart(); }
-	virtual void OnPreResetLevel() { OnStop(); }
-	virtual void OnPreExitLevel() { OnStop(); }
-	virtual void OnLevelFinish() { OnFinish(); }
+	virtual void OnPreLoadLevel() override { OnStart(); }
+	virtual void OnPreResetLevel() override { OnStop(); }
+	virtual void OnPreExitLevel() override { OnStop(); }
+	virtual void OnLevelFinish() override { OnFinish(); }
+	//virtual void OnPostExitLevel() override;
 
+#ifdef _DEBUG
 	virtual void OnPhysicalize(CK3dEntity* target, CKBOOL fixed, float friction, float elasticity, float mass,
 		CKSTRING collGroup, CKBOOL startFrozen, CKBOOL enableColl, CKBOOL calcMassCenter, float linearDamp,
 		float rotDamp, CKSTRING collSurface, VxVector massCenter, int convexCnt, CKMesh** convexMesh,
 		int ballCnt, VxVector* ballCenter, float* ballRadius, int concaveCnt, CKMesh** concaveMesh) override;
 	virtual void OnUnphysicalize(CK3dEntity* target) override;
+#endif
 
 	ILogger* Logger() { return GetLogger(); }
 	IBML* GetBML() { return m_bml; }

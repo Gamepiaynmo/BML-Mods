@@ -76,6 +76,7 @@ void CompressDataToFile(char* data, int size, const char* filename) {
 //
 //auto hookTime = &hook_time;
 
+#ifdef _DEBUG
 void TASSupport::OnPhysicalize(CK3dEntity* target, CKBOOL fixed, float friction, float elasticity, float mass,
 	CKSTRING collGroup, CKBOOL startFrozen, CKBOOL enableColl, CKBOOL calcMassCenter, float linearDamp,
 	float rotDamp, CKSTRING collSurface, VxVector massCenter, int convexCnt, CKMesh** convexMesh,
@@ -100,6 +101,7 @@ void TASSupport::OnUnphysicalize(CK3dEntity* target) {
 		g_mod->Logger()->Info("Unphysicalize %s %f %f %f", name, pos.x, pos.y, pos.z);
 	}
 }
+#endif
 
 class HookInputManager : public CKInputManager {
 public:
@@ -386,9 +388,45 @@ void TASSupport::OnProcess() {
 	}
 }
 
+//void TASSupport::OnPostExitLevel() {
+//	CKBaseManager* physicsManager = m_bml->GetCKContext()->GetManagerByGuid(CKGUID(0x6bed328b, 0x141f5148));
+//	BYTE* moduleAddr = reinterpret_cast<BYTE*>(GetModuleHandle("physics_RT.dll"));
+//	//CKERROR(CKBaseManager:: * ClearFunc)();
+//	//*reinterpret_cast<DWORD*>(&ClearFunc) = *(*reinterpret_cast<DWORD**>(physicsManager) + 4);
+//	//(physicsManager->*ClearFunc)();
+//	//CKERROR(CKBaseManager:: * EndFunc)();
+//	//*reinterpret_cast<DWORD*>(&EndFunc) = *(*reinterpret_cast<DWORD**>(physicsManager) + 12);
+//	//(physicsManager->*EndFunc)();
+//	//CKERROR(CKBaseManager:: * ConstructorFunc)(CKContext*);
+//	//*reinterpret_cast<BYTE**>(&ConstructorFunc) = reinterpret_cast<BYTE*>(GetModuleHandle("physics_RT.dll")) + 0x6730;
+//	//(physicsManager->*ConstructorFunc)(m_bml->GetCKContext());
+//	//CKERROR(CKBaseManager:: * PauseFunc)();
+//	//*reinterpret_cast<DWORD*>(&PauseFunc) = *(*reinterpret_cast<DWORD**>(physicsManager) + 15);
+//	//(physicsManager->*PauseFunc)();
+//	CKERROR(CKBaseManager:: * ResetFunc)();
+//	*reinterpret_cast<DWORD*>(&ResetFunc) = *(*reinterpret_cast<DWORD**>(physicsManager) + 13);
+//	(physicsManager->*ResetFunc)();
+//	//CKERROR(CKBaseManager:: * InitFunc)();
+//	//*reinterpret_cast<DWORD*>(&InitFunc) = *(*reinterpret_cast<DWORD**>(physicsManager) + 11);
+//	//(physicsManager->*InitFunc)();
+//	CKERROR(CKBaseManager:: * PlayFunc)();
+//	*reinterpret_cast<BYTE**>(&PlayFunc) = reinterpret_cast<BYTE*>(GetModuleHandle("physics_RT.dll")) + 0x6BB0;
+//	(physicsManager->*PlayFunc)();
+//}
+
 void TASSupport::OnStart() {
 	if (m_enabled->GetBoolean()) {
 		m_bml->AddTimer(1u, [this]() {
+			// 0x43ec
+			// OnCKReset
+			// OnCKPlay
+			// OnCKPause empty
+			// OnCKEnd
+			// OnCKInit
+			// PostClearAll
+			// PostProcess
+			// PreProcess
+			// vtable 100632D0
 			CKBaseManager* physicsManager = m_bml->GetCKContext()->GetManagerByGuid(CKGUID(0x6bed328b, 0x141f5148));
 			float* averageTickTime = reinterpret_cast<float*>(reinterpret_cast<BYTE*>(physicsManager) + 0xC8);
 			*averageTickTime = m_bml->GetTimeManager()->GetLastDeltaTime();
@@ -413,12 +451,13 @@ void TASSupport::OnStart() {
 			m_readyToPlay = false;
 			m_playing = true;
 			m_curFrame = 0;
-			m_bml->SendIngameMessage("Start playing TAS record.");
+			m_bml->SendIngameMessage("Start playing TAS.");
 		}
 		else if (m_record->GetBoolean()) {
 			m_recording = true;
 			m_curFrame = 0;
 			m_recordData.clear();
+			m_bml->SendIngameMessage("Start recording TAS.");
 		}
 	}
 }
@@ -427,7 +466,8 @@ void TASSupport::OnStop() {
 	if (m_enabled->GetBoolean()) {
 		if (m_playing || m_recording) {
 			if (m_playing)
-				m_bml->SendIngameMessage("TAS record playing stopped.");
+				m_bml->SendIngameMessage("TAS playing stopped.");
+			else m_bml->SendIngameMessage("TAS recording stopped.");
 			m_playing = m_recording = false;
 			m_recordData.clear();
 			m_recordData.shrink_to_fit();
