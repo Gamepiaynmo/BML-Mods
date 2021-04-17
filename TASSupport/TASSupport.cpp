@@ -244,6 +244,26 @@ void TASSupport::OnLoad() {
 			});
 		m_tasEntry->SetActive(false);
 		m_tasListGui = new GuiTASList();
+
+		m_keysGui = new BGui::Gui();
+		m_keysGui->AddPanel("M_TAS_Keys_Bg", VxColor(0, 0, 0, 180), 0.28f, 0.74f, 0.45f, 0.12f);
+		m_butUp = m_keysGui->AddSmallButton("M_TAS_Keys_Up", "^", 0.76f, 0.56f);
+		m_butDown = m_keysGui->AddSmallButton("M_TAS_Keys_Down", "v", 0.8f, 0.56f);
+		m_butLeft = m_keysGui->AddSmallButton("M_TAS_Keys_Left", "<", 0.8f, 0.48f);
+		m_butRight = m_keysGui->AddSmallButton("M_TAS_Keys_Right", ">", 0.8f, 0.64f);
+		m_butShift = m_keysGui->AddSmallButton("M_TAS_Keys_Shift", "Shift", 0.8f, 0.30f);
+		m_butSpace = m_keysGui->AddSmallButton("M_TAS_Keys_Space", "Space", 0.8f, 0.38f);
+		m_butQ = m_keysGui->AddSmallButton("M_TAS_Keys_Q", "Q", 0.76f, 0.38f);
+		m_butEsc = m_keysGui->AddSmallButton("M_TAS_Keys_Esc", "Esc", 0.76f, 0.30f);
+		m_butUp->SetActive(false);
+		m_butDown->SetActive(false);
+		m_butLeft->SetActive(false);
+		m_butRight->SetActive(false);
+		m_butShift->SetActive(false);
+		m_butSpace->SetActive(false);
+		m_butQ->SetActive(false);
+		m_butEsc->SetActive(false);
+		m_keysGui->SetVisible(false);
 	}
 }
 
@@ -382,8 +402,29 @@ void TASSupport::OnProcess() {
 				m_tasListGui->Process();
 		}
 
-		if (m_playing && m_bml->GetInputManager()->IsKeyPressed(m_stopKey->GetKey())) {
-			OnStop();
+		if (m_playing) {
+			if (m_keysGui) {
+				KeyState state = g_mod->m_recordData[g_mod->m_curFrame].keyState;
+				state.key_up ? m_butUp->OnMouseEnter() : m_butUp->OnMouseLeave();
+				m_butUp->Process();
+				state.key_down ? m_butDown->OnMouseEnter() : m_butDown->OnMouseLeave();
+				m_butDown->Process();
+				state.key_left ? m_butLeft->OnMouseEnter() : m_butLeft->OnMouseLeave();
+				m_butLeft->Process();
+				state.key_right ? m_butRight->OnMouseEnter() : m_butRight->OnMouseLeave();
+				m_butRight->Process();
+				state.key_shift ? m_butShift->OnMouseEnter() : m_butShift->OnMouseLeave();
+				m_butShift->Process();
+				state.key_space ? m_butSpace->OnMouseEnter() : m_butSpace->OnMouseLeave();
+				m_butSpace->Process();
+				state.key_q ? m_butQ->OnMouseEnter() : m_butQ->OnMouseLeave();
+				m_butQ->Process();
+				state.key_esc ? m_butEsc->OnMouseEnter() : m_butEsc->OnMouseLeave();
+				m_butEsc->Process();
+			}
+
+			if (m_bml->GetInputManager()->IsKeyPressed(m_stopKey->GetKey()))
+				OnStop();
 		}
 	}
 }
@@ -452,6 +493,7 @@ void TASSupport::OnStart() {
 			m_playing = true;
 			m_curFrame = 0;
 			m_bml->SendIngameMessage("Start playing TAS.");
+			m_keysGui->SetVisible(true);
 		}
 		else if (m_record->GetBoolean()) {
 			m_recording = true;
@@ -468,6 +510,7 @@ void TASSupport::OnStop() {
 			if (m_playing)
 				m_bml->SendIngameMessage("TAS playing stopped.");
 			else m_bml->SendIngameMessage("TAS recording stopped.");
+			m_keysGui->SetVisible(false);
 			m_playing = m_recording = false;
 			m_recordData.clear();
 			m_recordData.shrink_to_fit();

@@ -128,4 +128,8 @@ public:
 	BGui::Gui* m_tasEntryGui = nullptr;
 	BGui::Button* m_tasEntry;
 	GuiTASList* m_tasListGui = nullptr;
+
+	BGui::Gui* m_keysGui = nullptr;
+	BGui::Button* m_butUp, * m_butDown, * m_butLeft, * m_butRight,
+		* m_butShift, * m_butSpace, * m_butQ, * m_butEsc;
 };
