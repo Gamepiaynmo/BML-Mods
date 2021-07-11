@@ -82,24 +82,24 @@ void TASSupport::OnPhysicalize(CK3dEntity* target, CKBOOL fixed, float friction,
 	float rotDamp, CKSTRING collSurface, VxVector massCenter, int convexCnt, CKMesh** convexMesh,
 	int ballCnt, VxVector* ballCenter, float* ballRadius, int concaveCnt, CKMesh** concaveMesh) {
 
-	CK3dEntity* curBall = static_cast<CK3dEntity*>(m_curLevel->GetElementObject(0, 1));
-	if (curBall == target) {
+	//CK3dEntity* curBall = static_cast<CK3dEntity*>(m_curLevel->GetElementObject(0, 1));
+	//if (curBall == target) {
 		CKSTRING name = target->GetName();
 		VxVector pos;
 		reinterpret_cast<CK3dEntity*>(target)->GetPosition(&pos);
 		g_mod->Logger()->Info("Physicalize %s %f %f %f", name, pos.x, pos.y, pos.z);
-	}
+	//}
 }
 
 void TASSupport::OnUnphysicalize(CK3dEntity* target) {
 
-	CK3dEntity* curBall = static_cast<CK3dEntity*>(m_curLevel->GetElementObject(0, 1));
-	if (curBall == target) {
+	//CK3dEntity* curBall = static_cast<CK3dEntity*>(m_curLevel->GetElementObject(0, 1));
+	//if (curBall == target) {
 		CKSTRING name = target->GetName();
 		VxVector pos;
 		reinterpret_cast<CK3dEntity*>(target)->GetPosition(&pos);
 		g_mod->Logger()->Info("Unphysicalize %s %f %f %f", name, pos.x, pos.y, pos.z);
-	}
+	//}
 }
 #endif
 
@@ -163,7 +163,6 @@ public:
 		//tickCount++;
 		if (g_mod->m_recording) {
 			g_mod->m_recordData.push_back(FrameData(GetLastDeltaTime()));
-			//SetLastDeltaTime(1000.0f / 144);
 		}
 
 		if (g_mod->m_playing) {
@@ -171,8 +170,6 @@ public:
 				SetLastDeltaTime(g_mod->m_recordData[g_mod->m_curFrame].deltaTime);
 			else g_mod->OnStop();
 		}
-
-		//SetLastDeltaTimeFree(GetLastDeltaTime());
 
 		return ret;
 	}
@@ -216,6 +213,34 @@ void TASSupport::OnLoad() {
 	m_stopKey = GetConfig()->GetProperty("Misc", "StopKey");
 	m_stopKey->SetComment("Key for stop playing");
 	m_stopKey->SetDefaultKey(CKKEY_F3);
+
+	m_showKeys = GetConfig()->GetProperty("Misc", "ShowKeysGui");
+	m_showKeys->SetComment("Show realtime keyboard behavior for TAS records");
+	m_showKeys->SetDefaultBoolean(true);
+
+	m_skipRender = GetConfig()->GetProperty("Misc", "SkipRenderUntil");
+	m_skipRender->SetComment("Skip render until the given frame to speed up TAS playing");
+	m_skipRender->SetDefaultInteger(0);
+
+	m_exitOnDead = GetConfig()->GetProperty("Misc", "ExitOnDead");
+	m_exitOnDead->SetComment("Automatically exit game when ball fell");
+	m_exitOnDead->SetDefaultBoolean(false);
+
+	m_exitOnFinish = GetConfig()->GetProperty("Misc", "ExitOnFinish");
+	m_exitOnFinish->SetComment("Automatically exit game when TAS playing finished");
+	m_exitOnFinish->SetDefaultBoolean(false);
+
+	m_exitKey = GetConfig()->GetProperty("Misc", "ExitKey");
+	m_exitKey->SetComment("Press to exit game quickly");
+	m_exitKey->SetDefaultKey(CKKEY_DELETE);
+
+	m_loadTAS = GetConfig()->GetProperty("Misc", "AutoLoadTAS");
+	m_loadTAS->SetComment("Automatically load TAS record on game startup");
+	m_loadTAS->SetDefaultString("");
+
+	m_loadLevel = GetConfig()->GetProperty("Misc", "AutoLoadLevel");
+	m_loadLevel->SetComment("Automatically load given level on game startup");
+	m_loadLevel->SetDefaultInteger(0);
 
 	if (m_enabled->GetBoolean()) {
 		MH_Initialize();
@@ -282,9 +307,11 @@ void TASSupport::OnLoadObject(CKSTRING filename, BOOL isMap, CKSTRING masterName
 
 	if (!strcmp(filename, "3D Entities\\Menu.nmo")) {
 		m_level01 = m_bml->Get2dEntityByName("M_Start_But_01");
-		CKBehavior* menuMain = m_bml->GetScriptByName("Menu_Start");
-		m_exitStart = ScriptHelper::FindFirstBB(menuMain, "Exit");
+		CKBehavior* menuStart = m_bml->GetScriptByName("Menu_Start");
+		m_exitStart = ScriptHelper::FindFirstBB(menuStart, "Exit");
 		m_keyboard = m_bml->GetArrayByName("Keyboard");
+		CKBehavior* menuMain = m_bml->GetScriptByName("Menu_Main");
+		m_exitMain = ScriptHelper::FindFirstBB(menuMain, "Exit", false, 1, 0);
 	}
 
 	if (isMap) {
@@ -301,6 +328,10 @@ void TASSupport::OnLoadScript(CKSTRING filename, CKBehavior* script) {
 			|| !strcmp(script->GetName(), "Ball_Explosion_Stone")) {
 			CKBehavior* beh = ScriptHelper::FindFirstBB(script, "Set Position");
 			ScriptHelper::DeleteBB(script, beh);
+		}
+
+		if (!strcmp(script->GetName(), "Balls_Init")) {
+			m_initPieces = ScriptHelper::FindFirstBB(script, "Init Ballpieces");
 		}
 	}
 }
@@ -403,8 +434,8 @@ void TASSupport::OnProcess() {
 		}
 
 		if (m_playing) {
-			if (m_keysGui) {
-				KeyState state = g_mod->m_recordData[g_mod->m_curFrame].keyState;
+			if (m_showKeys->GetBoolean() && m_keysGui && m_curFrame < m_recordData.size()) {
+				KeyState state = m_recordData[m_curFrame].keyState;
 				state.key_up ? m_butUp->OnMouseEnter() : m_butUp->OnMouseLeave();
 				m_butUp->Process();
 				state.key_down ? m_butDown->OnMouseEnter() : m_butDown->OnMouseLeave();
@@ -425,35 +456,94 @@ void TASSupport::OnProcess() {
 
 			if (m_bml->GetInputManager()->IsKeyPressed(m_stopKey->GetKey()))
 				OnStop();
+
+			if (m_curFrame < m_skipRender->GetInteger())
+				m_bml->SkipRenderForNextTick();
+
+			if (m_bml->GetInputManager()->IsKeyPressed(m_exitKey->GetKey()))
+				m_bml->ExitGame();
 		}
 	}
 }
 
-//void TASSupport::OnPostExitLevel() {
-//	CKBaseManager* physicsManager = m_bml->GetCKContext()->GetManagerByGuid(CKGUID(0x6bed328b, 0x141f5148));
-//	BYTE* moduleAddr = reinterpret_cast<BYTE*>(GetModuleHandle("physics_RT.dll"));
-//	//CKERROR(CKBaseManager:: * ClearFunc)();
-//	//*reinterpret_cast<DWORD*>(&ClearFunc) = *(*reinterpret_cast<DWORD**>(physicsManager) + 4);
-//	//(physicsManager->*ClearFunc)();
-//	//CKERROR(CKBaseManager:: * EndFunc)();
-//	//*reinterpret_cast<DWORD*>(&EndFunc) = *(*reinterpret_cast<DWORD**>(physicsManager) + 12);
-//	//(physicsManager->*EndFunc)();
-//	//CKERROR(CKBaseManager:: * ConstructorFunc)(CKContext*);
-//	//*reinterpret_cast<BYTE**>(&ConstructorFunc) = reinterpret_cast<BYTE*>(GetModuleHandle("physics_RT.dll")) + 0x6730;
-//	//(physicsManager->*ConstructorFunc)(m_bml->GetCKContext());
-//	//CKERROR(CKBaseManager:: * PauseFunc)();
-//	//*reinterpret_cast<DWORD*>(&PauseFunc) = *(*reinterpret_cast<DWORD**>(physicsManager) + 15);
-//	//(physicsManager->*PauseFunc)();
-//	CKERROR(CKBaseManager:: * ResetFunc)();
-//	*reinterpret_cast<DWORD*>(&ResetFunc) = *(*reinterpret_cast<DWORD**>(physicsManager) + 13);
-//	(physicsManager->*ResetFunc)();
-//	//CKERROR(CKBaseManager:: * InitFunc)();
-//	//*reinterpret_cast<DWORD*>(&InitFunc) = *(*reinterpret_cast<DWORD**>(physicsManager) + 11);
-//	//(physicsManager->*InitFunc)();
-//	CKERROR(CKBaseManager:: * PlayFunc)();
-//	*reinterpret_cast<BYTE**>(&PlayFunc) = reinterpret_cast<BYTE*>(GetModuleHandle("physics_RT.dll")) + 0x6BB0;
-//	(physicsManager->*PlayFunc)();
-//}
+void TASSupport::OnPostStartMenu() {
+	static bool firstTime = true;
+
+	if (firstTime) {
+		std::string tasFile = m_loadTAS->GetString();
+		if (m_enabled->GetBoolean() && !tasFile.empty()) {
+			std::string tasPath = "..\\ModLoader\\TASRecords\\" + tasFile + ".tas";
+			if (std::filesystem::exists(tasPath)) {
+				g_mod->GetBML()->SendIngameMessage(("Loading TAS Record: " + tasFile + ".tas").c_str());
+				LoadTAS(tasPath);
+
+				int level = m_loadLevel->GetInteger();
+				if (level >= 1 && level <= 13) {
+					m_bml->AddTimer(2u, [this, level]() {
+						m_curLevel->SetElementValue(0, 0, &level);
+
+						CKContext* ctx = m_bml->GetCKContext();
+						CKMessageManager* mm = ctx->GetMessageManager();
+						CKMessageType loadLevel = mm->AddMessageType("Load Level");
+						CKMessageType loadMenu = mm->AddMessageType("Menu_Load");
+
+						mm->SendMessageSingle(loadLevel, ctx->GetCurrentLevel());
+						mm->SendMessageSingle(loadMenu, m_bml->GetGroupByName("All_Sound"));
+						m_bml->Get2dEntityByName("M_BlackScreen")->Show(CKHIDE);
+						m_exitMain->ActivateInput(0);
+						m_exitMain->Activate();
+						});
+				}
+			}
+			else m_bml->SendIngameMessage(("TAS file " + tasFile + ".tas not found.").c_str());
+		}
+
+		firstTime = false;
+	}
+}
+
+void TASSupport::OnBallOff() {
+	if (m_enabled->GetBoolean() && m_playing && m_exitOnDead->GetBoolean())
+		m_bml->ExitGame();
+}
+
+#ifdef _DEBUG
+void TASSupport::OnPostExitLevel() {
+	CKBaseManager* physicsManager = m_bml->GetCKContext()->GetManagerByGuid(CKGUID(0x6bed328b, 0x141f5148));
+	BYTE* moduleAddr = reinterpret_cast<BYTE*>(GetModuleHandle("physics_RT.dll"));
+	CKERROR(CKBaseManager:: * ClearFunc)();
+	*reinterpret_cast<DWORD*>(&ClearFunc) = *(*reinterpret_cast<DWORD**>(physicsManager) + 4);
+	(physicsManager->*ClearFunc)();
+	CKERROR(CKBaseManager:: * EndFunc)();
+	*reinterpret_cast<DWORD*>(&EndFunc) = *(*reinterpret_cast<DWORD**>(physicsManager) + 12);
+	(physicsManager->*EndFunc)();
+	CKERROR(CKBaseManager:: * ConstructorFunc)(CKContext*);
+	*reinterpret_cast<BYTE**>(&ConstructorFunc) = reinterpret_cast<BYTE*>(GetModuleHandle("physics_RT.dll")) + 0x6730;
+	(physicsManager->*ConstructorFunc)(m_bml->GetCKContext());
+	//CKERROR(CKBaseManager:: * PauseFunc)();
+	//*reinterpret_cast<DWORD*>(&PauseFunc) = *(*reinterpret_cast<DWORD**>(physicsManager) + 15);
+	//(physicsManager->*PauseFunc)();
+	//CKERROR(CKBaseManager:: * ResetFunc)();
+	//*reinterpret_cast<DWORD*>(&ResetFunc) = *(*reinterpret_cast<DWORD**>(physicsManager) + 13);
+	//(physicsManager->*ResetFunc)();
+	CKERROR(CKBaseManager:: * InitFunc)();
+	*reinterpret_cast<DWORD*>(&InitFunc) = *(*reinterpret_cast<DWORD**>(physicsManager) + 11);
+	(physicsManager->*InitFunc)();
+	CKERROR(CKBaseManager:: * PlayFunc)();
+	*reinterpret_cast<BYTE**>(&PlayFunc) = reinterpret_cast<BYTE*>(GetModuleHandle("physics_RT.dll")) + 0x6BB0;
+	(physicsManager->*PlayFunc)();
+
+	m_bml->RestoreIC(m_bml->Get3dEntityByName("Ball_PaperPieces_Frame"), true);
+	m_bml->RestoreIC(m_bml->Get3dEntityByName("Ball_StonePieces_Frame"), true);
+	m_bml->RestoreIC(m_bml->Get3dEntityByName("Ball_WoodPieces_Frame"), true);
+
+	m_initPieces->ActivateInput(0);
+	m_initPieces->Activate();
+	CKBehavior* Balls_Init = m_bml->GetScriptByName("Balls_Init");
+	CKBehavior* temp = m_initPieces->GetParent();
+	m_initPieces->GetParent()->Activate();
+}
+#endif
 
 void TASSupport::OnStart() {
 	if (m_enabled->GetBoolean()) {
@@ -493,7 +583,8 @@ void TASSupport::OnStart() {
 			m_playing = true;
 			m_curFrame = 0;
 			m_bml->SendIngameMessage("Start playing TAS.");
-			m_keysGui->SetVisible(true);
+			if (m_showKeys->GetBoolean())
+				m_keysGui->SetVisible(true);
 		}
 		else if (m_record->GetBoolean()) {
 			m_recording = true;
@@ -507,10 +598,14 @@ void TASSupport::OnStart() {
 void TASSupport::OnStop() {
 	if (m_enabled->GetBoolean()) {
 		if (m_playing || m_recording) {
-			if (m_playing)
+			if (m_playing) {
 				m_bml->SendIngameMessage("TAS playing stopped.");
+				if (m_exitOnFinish->GetBoolean())
+					m_bml->ExitGame();
+			}
 			else m_bml->SendIngameMessage("TAS recording stopped.");
-			m_keysGui->SetVisible(false);
+			if (m_showKeys->GetBoolean())
+				m_keysGui->SetVisible(false);
 			m_playing = m_recording = false;
 			m_recordData.clear();
 			m_recordData.shrink_to_fit();

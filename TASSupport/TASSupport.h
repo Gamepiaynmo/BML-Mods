@@ -85,13 +85,16 @@ public:
 	virtual void OnLoadScript(CKSTRING filename, CKBehavior* script) override;
 	virtual void OnProcess() override;
 
+	virtual void OnBallOff() override;
 	virtual void OnPreLoadLevel() override { OnStart(); }
 	virtual void OnPreResetLevel() override { OnStop(); }
 	virtual void OnPreExitLevel() override { OnStop(); }
 	virtual void OnLevelFinish() override { OnFinish(); }
-	//virtual void OnPostExitLevel() override;
+	virtual void OnPostStartMenu() override;
 
 #ifdef _DEBUG
+	virtual void OnPostExitLevel() override;
+
 	virtual void OnPhysicalize(CK3dEntity* target, CKBOOL fixed, float friction, float elasticity, float mass,
 		CKSTRING collGroup, CKBOOL startFrozen, CKBOOL enableColl, CKBOOL calcMassCenter, float linearDamp,
 		float rotDamp, CKSTRING collSurface, VxVector massCenter, int convexCnt, CKMesh** convexMesh,
@@ -125,11 +128,17 @@ public:
 
 	CK2dEntity* m_level01;
 	CKBehavior* m_exitStart;
+	CKBehavior* m_initPieces;
 	BGui::Gui* m_tasEntryGui = nullptr;
 	BGui::Button* m_tasEntry;
 	GuiTASList* m_tasListGui = nullptr;
+	CKBehavior* m_exitMain;
 
+	IProperty* m_showKeys;
 	BGui::Gui* m_keysGui = nullptr;
 	BGui::Button* m_butUp, * m_butDown, * m_butLeft, * m_butRight,
 		* m_butShift, * m_butSpace, * m_butQ, * m_butEsc;
+
+	IProperty* m_skipRender, * m_exitOnDead, * m_exitOnFinish, * m_exitKey;
+	IProperty* m_loadTAS, * m_loadLevel;
 };
