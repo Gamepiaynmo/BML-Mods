@@ -138,6 +138,8 @@ public:
 	BGui::Gui* m_keysGui = nullptr;
 	BGui::Button* m_butUp, * m_butDown, * m_butLeft, * m_butRight,
 		* m_butShift, * m_butSpace, * m_butQ, * m_butEsc;
+	char m_frameCountText[100];
+	BGui::Label* m_frameCountLabel;
 
 	IProperty* m_skipRender, * m_exitOnDead, * m_exitOnFinish, * m_exitKey;
 	IProperty* m_loadTAS, * m_loadLevel;

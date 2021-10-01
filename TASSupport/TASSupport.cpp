@@ -280,6 +280,8 @@ void TASSupport::OnLoad() {
 		m_butSpace = m_keysGui->AddSmallButton("M_TAS_Keys_Space", "Space", 0.8f, 0.38f);
 		m_butQ = m_keysGui->AddSmallButton("M_TAS_Keys_Q", "Q", 0.76f, 0.38f);
 		m_butEsc = m_keysGui->AddSmallButton("M_TAS_Keys_Esc", "Esc", 0.76f, 0.30f);
+		m_frameCountLabel = m_keysGui->AddTextLabel("M_TAS_FrameCount", "", ExecuteBB::GAMEFONT_01, 0.0f, 0.7f, 1.0f, 0.0353f);
+		m_frameCountLabel->SetAlignment(ALIGN_CENTER);
 		m_butUp->SetActive(false);
 		m_butDown->SetActive(false);
 		m_butLeft->SetActive(false);
@@ -452,6 +454,9 @@ void TASSupport::OnProcess() {
 				m_butQ->Process();
 				state.key_esc ? m_butEsc->OnMouseEnter() : m_butEsc->OnMouseLeave();
 				m_butEsc->Process();
+				sprintf(m_frameCountText, "#%d", m_curFrame);
+				m_frameCountLabel->SetText(m_frameCountText);
+				m_frameCountLabel->Process();
 			}
 
 			if (m_bml->GetInputManager()->IsKeyPressed(m_stopKey->GetKey()))
